@@ -1,0 +1,4 @@
+enum SettingKeys {
+  UserInfo,
+  LastUserId
+}
