@@ -5,6 +5,7 @@ import 'package:care_app/Models/FamilyCardModel.dart';
 import 'package:care_app/Providers/UserProvider.dart';
 import 'package:care_app/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ import 'package:easy_localization/easy_localization.dart' as easylocal;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter_signature_pad/flutter_signature_pad.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class ReadCardView extends StatefulWidget {
   @override
@@ -150,6 +152,11 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
     con.cardWithAmount = false;
     con.cardWithAmountColor = Colors.black;
     con.showCardWithAmount = false;
+    con.delegatedBy = false;
+    con.delegatedNameController.text = '';
+    con.delegatedIdController.text = '';
+    con.delegatedName = null;
+    con.delegatedId = null;
     super.dispose();
   }
 
@@ -166,11 +173,9 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
             title: new Align(
                 child: Text("Read_Card".tr()), alignment: Alignment.center),
             automaticallyImplyLeading: false,
-            actions: [
-              new Padding(padding: EdgeInsets.only(left: 10, right: 10),
+            actions: [ new Padding(padding: EdgeInsets.only(left: 10, right: 10),
                   child: Icon(
-                      con.connected ? Icons.print : Icons.print_disabled))
-            ],
+                      con.connected ? Icons.print : Icons.print_disabled)) ],
             leading: IconButton(
                 icon: Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => onBack()
@@ -197,6 +202,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                         alignment: Alignment.center),
                       padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 20, bottom: 0),
                     ),
+
                     con.selectedActivityModel.key!.isNotEmpty ?
                     new Column(children: [
                       new Row(children: [
@@ -414,9 +420,59 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                           )
                         ),
                       ]),
+
+                      new Padding(child: new Card(color: Colors.white70,
+                          child: new Column(children: [
+                            new Row(children: [
+                              new Expanded(child: new Padding(
+                                  child: new Checkbox(checkColor: Colors.white, activeColor: Colors.red, value: con.delegatedBy,
+                                      onChanged: (bool? value) { con.onDelegatedByChange(value!);  }),
+                                  padding: EdgeInsets.only(left:10,right:10,bottom: 10,top: 10)),flex: 1,),
+                              new Expanded(child:  new Text('Delegated_By'.tr(), style: TextStyle(fontSize: ScreenUtil().setSp(17),fontWeight: FontWeight.bold)),flex: 6,)
+                            ]),
+
+                            new Row(children: [
+
+                              new Expanded(child: new Padding(
+                                  child: TextFormField(controller: con.delegatedIdController,
+                                    onChanged: (value) { con.onDelegatedIdChange(value); },
+                                    inputFormatters: [LengthLimitingTextInputFormatter(100)],
+                                    enabled: con.delegatedBy,
+                                    keyboardType: TextInputType.name,
+                                    decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        labelText: 'Delegated_Id'.tr(),
+                                        hintText: 'Delegated_Id'.tr()),
+                                  ),
+                                  padding: EdgeInsets.only(left: 15,right: 15))
+                                  ,flex: 2),
+
+                              new Expanded(child: new Padding(
+                                  child: TextFormField(controller: con.delegatedNameController,
+                                    onChanged: (value) {  con.onDelegatedNameChange(value); },
+                                    inputFormatters: [LengthLimitingTextInputFormatter(100)],
+                                    enabled: con.delegatedBy,
+                                    keyboardType: TextInputType.name,
+                                    decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        labelText: 'Delegated_Name'.tr(),
+                                        hintText: 'Delegated_Name'.tr()),
+                                  ),
+                                  padding: EdgeInsets.only(left: 15,right: 15))
+                                  ,flex: 2),
+
+                            ]),
+
+                            new SizedBox(height: 15),
+
+                      ])),padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15, bottom: 0)),
+
+
+
                       new Row(children: [
                         new Expanded(child: new Padding(child: new Card(color: Colors.grey,child: new Container(width: MediaQuery.of(context).size.width,height: 2,)),padding:EdgeInsets.only(top:5,left: 10,right: 10,bottom: 5))),
                       ]),
+
                       new Row(
                           mainAxisSize: MainAxisSize.max,
                           children: [
@@ -458,9 +514,11 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                               ),
                             ),
                           ]),
+
                       new Row(children: [
                         new Expanded(child: new Padding(child: new Card(color: Colors.grey,child: new Container(width: MediaQuery.of(context).size.width,height: 2,)),padding:EdgeInsets.only(top:5,left: 10,right: 10,bottom: 5))),
                       ]),
+
                       new Row(children: [
                         new Expanded(child:
                             new Padding(padding: EdgeInsets.only(right: 25,left: 25),child:
@@ -476,6 +534,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                             )
                         )
                       ]),
+
                       new Row(children: [
                         new Expanded(
                             child: new Padding(child:
@@ -494,6 +553,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                             ),padding: EdgeInsets.only(top:5),),
                         ),
                       ]),
+
                       new Row(children: [
                         new Expanded(child: new Padding(child: new RaisedButton(
                               color: Color.fromRGBO(28, 29, 48, 1),
@@ -507,6 +567,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                                 left: 15.0, right: 15.0, top: 0, bottom: 0))
                         ),
                       ]),
+
                       new Padding(child: new Card(color: Colors.white70,
                         child: new Column(children: [
                           new Row(children: [
@@ -565,7 +626,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
 
                         ]),
                       ), padding: const EdgeInsets.only(
-                              left: 10.0, right: 10.0, top: 10, bottom: 0)),
+                              left: 10.0, right: 10.0, top: 10, bottom: 0))
 
                     ]) : new SizedBox(),
                     new SizedBox(height: 20),

@@ -42,9 +42,15 @@ class ReadCardController extends ControllerMVC {
         selectedActivityModel = new ActivitiesReceivedModel(),
         selectFamilyCardModel = new FamilyCardModel(),
         screenshotCardController = new ScreenshotController(),
+        delegatedIdController = new TextEditingController(),
+        delegatedNameController = new TextEditingController(),
         message = '',
+        delegatedName = null,
+        delegatedId = null,
         super(state);
 
+  TextEditingController delegatedIdController;
+  TextEditingController delegatedNameController;
 
   ScreenshotController screenshotCardController;
   static ReadCardController? _this;
@@ -60,6 +66,7 @@ class ReadCardController extends ControllerMVC {
   bool cardWithAmount = false;
   Color cardWithAmountColor = Colors.black;
   bool showCardWithAmount = false;
+  bool delegatedBy = false;
 
   BlueThermalPrinter bluetooth;
   List<BluetoothDevice> _devices = [];
@@ -71,6 +78,7 @@ class ReadCardController extends ControllerMVC {
       sign!.clear();
     }
   }
+
 
   // Widget getEnInvoice() {
   //   return new Row(children: [
@@ -546,6 +554,7 @@ class ReadCardController extends ControllerMVC {
                       identityImgs = [null];
                       showPrint = false;
                       clearSignature();
+                      initValues();
                     });
                   }
                   else {
@@ -627,15 +636,12 @@ class ReadCardController extends ControllerMVC {
         setState(() { showPrint = true; });
       }
       else {
-        showAlert(
-            'Error'.tr(), "No_Cash_For_F_C".tr(), AlertType.error);
+        showAlert('Error'.tr(), "No_Cash_For_F_C".tr(), AlertType.error);
       }
       db.close();
     }
     catch (ex) {
-      showAlert(
-          'Error'.tr(), 'An_Error'.tr() + ': $ex, ' + 'Enter_Page_Again'.tr(),
-          AlertType.error);
+      showAlert('Error'.tr(), 'An_Error'.tr() + ': $ex, ' + 'Enter_Page_Again'.tr(), AlertType.error);
     }
   }
 
@@ -768,5 +774,41 @@ class ReadCardController extends ControllerMVC {
       }
     });
     showCardWithAmount = cardWithAmount ? true : false;
+  }
+
+  String? delegatedName = null;
+  String? delegatedId = null;
+
+  void initValues() {
+    delegatedName = selectedActivityModel.delegatedName!;
+    delegatedId = selectedActivityModel.delegatedId!;
+    selectedActivityModel.delegatedName = null;
+    selectedActivityModel.delegatedId = null;
+  }
+
+  void onDelegatedByChange(bool value) {
+    setState(() {
+      delegatedBy = value!;
+      if(value == true) {
+        delegatedNameController.text = delegatedName!;
+        delegatedIdController.text = delegatedId!;
+        selectedActivityModel.delegatedName = delegatedName;
+        selectedActivityModel.delegatedId = delegatedId;
+      }
+      else {
+        delegatedNameController.text = '';
+        delegatedIdController.text = '';
+        selectedActivityModel.delegatedName = null;
+        selectedActivityModel.delegatedId = null;
+      }
+    });
+  }
+
+  void onDelegatedIdChange(String? value) {
+    setState(() { selectedActivityModel.delegatedId = value; });
+  }
+
+  void onDelegatedNameChange(String? value) {
+    setState(() { selectedActivityModel.delegatedName = value; });
   }
 }

@@ -121,7 +121,7 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(227, 111, 30, 1),
         title: new Align(child: Text('Approve_Card'.tr()), alignment: Alignment.center),
-        automaticallyImplyLeading:false,
+        automaticallyImplyLeading: false,
         actions: [ new Padding(padding: EdgeInsets.only(left: 10,right: 10),child:new Icon(null)) ],
         leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.white),
@@ -152,8 +152,10 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
                       padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 20, bottom: 0),
                     ))
                   ]),
+
                   con.selectedModel.key!.isNotEmpty ?
                     new Column(children: [
+
                         con.cardIdentifier!.isNotEmpty ?
                         new Padding(child: new Card(color: Colors.white70,
                           child: new Column(children: [
@@ -173,8 +175,9 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
                               ),padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 5)))
                             ])
                           ]),
-                        ), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)):
-                        new SizedBox(),
+                        ), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0))
+                        : new SizedBox(),
+
                         new Row(children: [
                           new Expanded(child:
                               new Padding(child:
@@ -205,6 +208,7 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
                                 padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15, bottom: 0),)
                           ),
                         ]),
+
                         new Padding(child: new Row(children: [
                           new Expanded(child: TextFormField(
                             controller: con.commentController,
@@ -216,7 +220,9 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
                             maxLength: 255
                           ))
                         ]), padding: const EdgeInsets.only(left: 17.0, right: 17.0, top: 10, bottom: 0)),
-                        new SizedBox(height: 50,)
+
+                        new SizedBox(height: 50)
+
                     ]) : new SizedBox()
               ],
             ),

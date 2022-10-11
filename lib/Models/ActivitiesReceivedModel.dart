@@ -25,8 +25,12 @@ class ActivitiesReceivedModel {
   String? mealCheckedSend = '';
   String? signImage;
 
-  static String selectWithoutImg = "id,activityId,[key],distibution_date,userid,received,isSend,info1,info2,info3,payment_USD,datesend,card_Id,mealUser,mealChecked,mealCheckedSend,signImage = null";
-  static String selectWithImg = "id,activityId,[key],distibution_date,userid,received,isSend,info1,info2,info3,payment_USD,datesend,card_Id,mealUser,mealChecked,mealCheckedSend,signImage";
+  //Delegation data.
+  String? delegatedName = '';
+  String? delegatedId = '';
+
+  static String selectWithoutImg = "id,activityId,[key],distibution_date,userid,received,isSend,info1,info2,info3,payment_USD,datesend,card_Id,mealUser,mealChecked,mealCheckedSend,delegatedId,delegatedName,signImage = null";
+  static String selectWithImg = "id,activityId,[key],distibution_date,userid,received,isSend,info1,info2,info3,payment_USD,datesend,card_Id,mealUser,mealChecked,mealCheckedSend,delegatedId,delegatedName,signImage";
 
   ActivitiesReceivedModel() {}
 

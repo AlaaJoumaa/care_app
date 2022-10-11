@@ -118,5 +118,8 @@
     "Incorrect_Login_Device": "Incorrect device info.",
     "Remove_UnReceived_Activities_Locally": "Remove unreceived activities locally.",
     "Sign_Received_And_Card" :  "Sign for receiving card & voucher amount",
-    "identity_Images_required": "Identity image is required"
+    "identity_Images_required": "Identity image is required",
+    "Delegated_Id": "Delegated Id",
+    "Delegated_Name": "Delegated name",
+    "Delegated_By": "Delegated by"
 }

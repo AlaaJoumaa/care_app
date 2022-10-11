@@ -26,7 +26,9 @@ ActivitiesReceivedModel _$ActivitiesReceivedModelFromJson(
       ..mealUser = json['mealUser'] as int?
       ..mealChecked = json['mealChecked'] as String?
       ..mealCheckedSend = json['mealCheckedSend'] as String?
-      ..signImage = json['signImage'] as String?;
+      ..signImage = json['signImage'] as String?
+      ..delegatedName = json['delegatedName'] as String?
+      ..delegatedId = json['delegatedId'] as String?;
 
 Map<String, dynamic> _$ActivitiesReceivedModelToJson(
     ActivitiesReceivedModel instance) =>
@@ -49,6 +51,8 @@ Map<String, dynamic> _$ActivitiesReceivedModelToJson(
       'mealChecked': instance.mealChecked,
       'mealCheckedSend': instance.mealCheckedSend,
       'signImage': instance.signImage,
+      'delegatedName': instance.delegatedName,
+      'delegatedId' : instance.delegatedId
     };
 
 ActivitiesReceivedModel _$ActivitiesReceivedModelsqliteFromJson(
@@ -72,4 +76,6 @@ ActivitiesReceivedModel _$ActivitiesReceivedModelsqliteFromJson(
       ..mealUser = json['mealUser'] as int?
       ..mealChecked = json['mealChecked'] as String?
       ..mealCheckedSend = json['mealCheckedSend'] as String?
-      ..signImage = json['signImage'] as String?;
+      ..signImage = json['signImage'] as String?
+      ..delegatedName = json['delegatedName'] as String?
+      ..delegatedId = json['delegatedId'] as String?;

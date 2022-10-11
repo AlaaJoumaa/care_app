@@ -107,6 +107,7 @@ class _LoginViewState extends StateMVC<LoginView> {
                                                                             ),
                                                                           ),
                                                                         ),
+
                                                                         Padding(
                                                                           padding: EdgeInsets.symmetric(horizontal: 15),
                                                                           child: TextFormField(
@@ -120,6 +121,7 @@ class _LoginViewState extends StateMVC<LoginView> {
                                                                             validator: (String? value) => con.emailValidator(value),
                                                                           ),
                                                                         ),
+
                                                                         Padding(
                                                                           padding: const EdgeInsets.only(
                                                                               left: 15.0, right: 15.0, top: 15, bottom: 0),
@@ -135,6 +137,7 @@ class _LoginViewState extends StateMVC<LoginView> {
                                                                               validator: (String? value) => con.passwordValidator(value) //(String? value) {
                                                                           ),
                                                                         ),
+
                                                                         Padding(padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15, bottom: 0),
                                                                           child :Container(
                                                                             height: 50,

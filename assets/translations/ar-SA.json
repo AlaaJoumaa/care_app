@@ -117,5 +117,8 @@
   "Incorrect_Login_Device": "بيانات الجهاز خاطئة.",
   "Remove_UnReceived_Activities_Locally": "حذف التوزيعات غير المستلمة من الجهاز.",
   "Sign_Received_And_Card" :  "التوقيع على استلام بطاقة مع قيمة القسيمة",
-  "identity_Images_required": "يرجى إدخال صورة الهوية"
+  "identity_Images_required": "يرجى إدخال صورة الهوية",
+  "Delegated_Id": "رقم الشخص المفوض",
+  "Delegated_Name": "اسم الشخص المفوض",
+  "Delegated_By": "تفويض"
 }

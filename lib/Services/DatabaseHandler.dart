@@ -32,7 +32,10 @@ class DatabaseHandler {
                                 "mealUser INTEGER," +
                                 "mealChecked NVARCHAR(50)," +
                                 "mealCheckedSend NVARCHAR(50)," +
-                                "signImage TEXT)");
+                                "signImage TEXT," +
+                                "delegatedName NVARCHAR(50)," +
+                                "delegatedId NVARCHAR(50)"
+                                ")");
         await database.execute("CREATE TABLE IF NOT EXISTS activityReceivedCards" +
                               "(activityReceived_Id INTEGER NOT NULL," +
                                "familyCard_Id INTEGER," +

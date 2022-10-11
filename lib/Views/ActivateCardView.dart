@@ -187,6 +187,7 @@ class _ActivateCardViewState extends StateMVC<ActivateCardView> {
                                       textAlign: TextAlign.center),padding: EdgeInsets.all(5))
                                   ),
                               ],),
+
                               new Row(children: [
                                   new Expanded(child:
                                       new Padding(child:new Text(con.SN_Lst!.toString(),

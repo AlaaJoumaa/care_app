@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:care_app/Enums/Permissions.dart';
 import 'package:care_app/Enums/SettingKeys.dart';
 import 'package:care_app/Models/ActivitiesReceivedModel.dart';
+import 'package:care_app/Models/DelegateOptionModel.dart';
 import 'package:care_app/Models/FamilyCardModel.dart';
 import 'package:care_app/Models/OptionModel.dart';
 import 'package:care_app/Providers/DistributionProvider.dart';
@@ -135,15 +136,16 @@ class HomeController extends ControllerMVC {
       var isMeal = true;
       if(UserProvider.currentRole == Permissions.Distributioner.index) { isMeal = false; }
       else if(UserProvider.currentRole == Permissions.MealCheck.index) { isMeal = true; }
-      var gottenModels = activitiesReceivedModels.map((e) => OptionModel()
+      var gottenModels = activitiesReceivedModels.map((e) => DelegateOptionModel()
                                                                 ..id = e.id
                                                                 ..option =
                                                                 DateFormat('yyyy-MM-dd HH:mm:ss')
                                                                     .format(isMeal ? DateTime.parse(e.mealChecked!) : DateTime.parse(e.distibution_date!))
-                                                                ..optionar = isMeal ? e.comments : e.signImage)
+                                                                ..optionar = isMeal ? e.comments : e.signImage
+                                                                ..delegatedId = e.delegatedId
+                                                                ..delegatedName = e.delegatedName)
                                                  .toList();
-      var result = await _distributionProvider.putReceivedModels(
-          gottenModels,UserProvider.currentRole!, UserProvider.currentUser!.token!);
+      var result = await _distributionProvider.putReceivedModels(gottenModels,UserProvider.currentRole!, UserProvider.currentUser!.token!);
       if (result.item2 == 401) { //Unauthorized access.
         setState(() { status_Msg += ('\n' + "Unauthorized_Access".tr()); });
       }
