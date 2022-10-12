@@ -17,6 +17,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:flutter_signature_pad/flutter_signature_pad.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
+//Enable false.
 class ReadCardView extends StatefulWidget {
   @override
   _ReadCardViewState createState() => _ReadCardViewState();
@@ -437,7 +438,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                                   child: TextFormField(controller: con.delegatedIdController,
                                     onChanged: (value) { con.onDelegatedIdChange(value); },
                                     inputFormatters: [LengthLimitingTextInputFormatter(100)],
-                                    enabled: con.delegatedBy,
+                                    enabled: false,
                                     keyboardType: TextInputType.name,
                                     decoration: InputDecoration(
                                         border: OutlineInputBorder(),
@@ -451,7 +452,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                                   child: TextFormField(controller: con.delegatedNameController,
                                     onChanged: (value) {  con.onDelegatedNameChange(value); },
                                     inputFormatters: [LengthLimitingTextInputFormatter(100)],
-                                    enabled: con.delegatedBy,
+                                    enabled: false,
                                     keyboardType: TextInputType.name,
                                     decoration: InputDecoration(
                                         border: OutlineInputBorder(),
