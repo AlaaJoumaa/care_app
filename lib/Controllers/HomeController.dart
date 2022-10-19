@@ -183,7 +183,7 @@ class HomeController extends ControllerMVC {
         status_Msg += ('\n' + 'Sync_Downloading_F_C'.tr());
       });
       var result = await _familyCardProvider.familyCards(
-          UserProvider.currentUser!.id!,
+          UserProvider.currentUser!.id,
           UserProvider.currentUser!.token!);
       if (result.item2 == 401) { //Unauthorized access.
         setState(() {
@@ -311,6 +311,7 @@ class HomeController extends ControllerMVC {
         //3- Uploading (status=Active) the family cards models.
         await _activateFamilyCardLocally(familyCardModels, db);
       }
+
       var pageSize = 1;
       var receivedCount = await _getCountModelsLocally(db);
       setState(() { status_Msg += ('\n' + 'Uploading_Activities'.tr()); });

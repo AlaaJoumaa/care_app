@@ -47,7 +47,7 @@ class _ActivateCardViewState extends StateMVC<ActivateCardView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       con.initLastSN();
       con.readNFCData();
       setState(() { con.resultColor = Colors.green; });
@@ -138,7 +138,7 @@ class _ActivateCardViewState extends StateMVC<ActivateCardView> {
 
                       new Expanded(child:
                         new Padding(child: new Container(
-                            child: new Text(con.SN!.toString(), style: new TextStyle(color: Colors.white,
+                            child: new Text(con.SN.toString(), style: new TextStyle(color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold),
                                 textAlign: TextAlign.center),
@@ -180,7 +180,7 @@ class _ActivateCardViewState extends StateMVC<ActivateCardView> {
                           child: new Column(children: [
                               new Row(children: [
                                   new Expanded(child:
-                                      new Padding(child:new Text(con.result!,
+                                      new Padding(child:new Text(con.result,
                                       style: new TextStyle(color: con.resultColor,
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold),
@@ -190,7 +190,7 @@ class _ActivateCardViewState extends StateMVC<ActivateCardView> {
 
                               new Row(children: [
                                   new Expanded(child:
-                                      new Padding(child:new Text(con.SN_Lst!.toString(),
+                                      new Padding(child:new Text(con.SN_Lst.toString(),
                                       style: new TextStyle(color: Colors.black,
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold),

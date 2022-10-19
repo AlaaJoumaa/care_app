@@ -64,7 +64,7 @@ class _SettingsViewState extends StateMVC<SettingsView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
 
     });
   }

@@ -19,7 +19,6 @@ class _InvoiceState extends StateMVC<Invoice> {
     super.initState();
   }
 
-
   @override
   void dispose() {
     super.dispose();

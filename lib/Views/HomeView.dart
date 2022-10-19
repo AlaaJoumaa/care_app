@@ -51,7 +51,7 @@ class _HomeViewState extends StateMVC<HomeView> {
   void initState() {
     super.initState();
     con.status_Msg = '';
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
         await con.checkInternetConnection();
         await con.checkNfc();
         await con.initStatistics();

@@ -17,7 +17,7 @@ import 'package:flutter/widgets.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:easy_localization/easy_localization.dart' as easylocal;
-import '/Utilities/FamilyCardRange.dart';
+import 'package:care_app/Utilities/FamilyCardRange.dart';
 //import 'package:device_info/device_info.dart';
 import 'package:platform_device_id/platform_device_id.dart';
 import 'package:clipboard/clipboard.dart';
@@ -162,7 +162,7 @@ class LoginController extends ControllerMVC {
   }
 
   String? passwordValidator(String? value) {
-    if (value!.isEmpty || value!.length < 2) {
+    if (value!.isEmpty || value.length < 2) {
       return 'Enter_Valid_Pass'.tr();
     }
   }

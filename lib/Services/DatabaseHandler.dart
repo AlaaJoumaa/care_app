@@ -17,7 +17,7 @@ class DatabaseHandler {
         await database.execute("CREATE TABLE IF NOT EXISTS activitiesReceived" +
                                "(id INTEGER NOT NULL," +
                                 "activityId INTEGER," +
-                                "key TEXT," +
+                                "key TEXT NOT NULL," +
                                 "distibution_date NVARCHAR(50)," +
                                 "userid INTEGER," +
                                 "received BOOLEAN," +

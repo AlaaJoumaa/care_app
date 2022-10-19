@@ -19,7 +19,6 @@ class _ProgressState extends StateMVC<Progress> {
     super.initState();
   }
 
-
   @override
   void dispose() {
     super.dispose();

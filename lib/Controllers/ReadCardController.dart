@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:care_app/main.dart';
@@ -44,6 +45,7 @@ class ReadCardController extends ControllerMVC {
         screenshotCardController = new ScreenshotController(),
         delegatedIdController = new TextEditingController(),
         delegatedNameController = new TextEditingController(),
+        suggestedActivityController = new TextEditingController(),
         message = '',
         delegatedName = null,
         delegatedId = null,
@@ -51,6 +53,7 @@ class ReadCardController extends ControllerMVC {
 
   TextEditingController delegatedIdController;
   TextEditingController delegatedNameController;
+  TextEditingController suggestedActivityController;
 
   ScreenshotController screenshotCardController;
   static ReadCardController? _this;
@@ -67,18 +70,22 @@ class ReadCardController extends ControllerMVC {
   Color cardWithAmountColor = Colors.black;
   bool showCardWithAmount = false;
   bool delegatedBy = false;
+  String invoiceDate = '';
 
   BlueThermalPrinter bluetooth;
   List<BluetoothDevice> _devices = [];
   bool connected = false;
 
+  String? delegatedName = null;
+  String? delegatedId = null;
+  List<ActivitiesReceivedModel> suggestedActivityModels = [];
+
   void clearSignature(){
     final sign = signature.currentState;
     if(sign != null) {
-      sign!.clear();
+      sign.clear();
     }
   }
-
 
   // Widget getEnInvoice() {
   //   return new Row(children: [
@@ -554,15 +561,16 @@ class ReadCardController extends ControllerMVC {
                       identityImgs = [null];
                       showPrint = false;
                       clearSignature();
-                      initValues();
+                      initDetectedActivityModelVals();
                     });
+                    initReceivedActivitiesModels();
                   }
                   else {
                     var ar = await _distributionProvider.getActivityByFamilyKey(familyCardModel.familyKey!,
                         UserProvider.currentUser!.id,
                         UserProvider.currentRole!,
                         db);
-                    if(ar != null && ar!.received) {
+                    if(ar != null && ar.received) {
                       //Activity has been received before.
                       showAlert('Error'.tr(),'F_C_received_voucher_amount'.tr(), AlertType.error);
                     }
@@ -605,9 +613,9 @@ class ReadCardController extends ControllerMVC {
       final Database db = await DatabaseHandler.initializeDB();
       //Get the beneficiary signature.
       var signImage = await signature.currentState!.getData();
-      var imageByteData = await signImage!.toByteData(format: ImageByteFormat.png);
-      var uint8ListData = imageByteData!.buffer!.asUint8List(imageByteData!.offsetInBytes,imageByteData!.lengthInBytes);
-      selectedActivityModel.signImage = base64.encode(uint8ListData!);
+      var imageByteData = await signImage.toByteData(format: ImageByteFormat.png);
+      var uint8ListData = imageByteData!.buffer.asUint8List(imageByteData.offsetInBytes,imageByteData.lengthInBytes);
+      selectedActivityModel.signImage = base64.encode(uint8ListData);
       // var signCompImage = await FlutterImageCompress.compressWithList(uint8ListData, minHeight: 64, minWidth: 64, quality: 96);
       // selectedActivityModel.signImage = base64.encode(signCompImage!);
       //Compressing identity images.
@@ -657,7 +665,7 @@ class ReadCardController extends ControllerMVC {
           showAlert('Error'.tr(),"Can't_generate_invoice".tr(),AlertType.error);
         }
         else {
-          bluetooth.printImageBytes(bytes!);
+          bluetooth.printImageBytes(bytes);
           bluetooth.printNewLine();
           bluetooth.printNewLine();
           bluetooth.printNewLine();
@@ -741,7 +749,7 @@ class ReadCardController extends ControllerMVC {
           XFile? _identityFile = await _picker.pickImage(
               source: ImageSource.camera);
           if (_identityFile != null) {
-            var image = await _identityFile?.readAsBytes();
+            var image = await _identityFile.readAsBytes();
             setState(() {
               identityImgs[index] = image;
               if (index == identityImgs.length - 1) {
@@ -757,7 +765,7 @@ class ReadCardController extends ControllerMVC {
 
   void onCardWithAmountChange(bool value) {
     setState(() {
-      cardWithAmount = value!;
+      cardWithAmount = value;
     });
     Timer.periodic(new Duration(seconds: 1), (timer) {
       if (cardWithAmount) {
@@ -776,24 +784,31 @@ class ReadCardController extends ControllerMVC {
     showCardWithAmount = cardWithAmount ? true : false;
   }
 
-  String? delegatedName = null;
-  String? delegatedId = null;
-
-  void initValues() {
-    delegatedName = selectedActivityModel.delegatedName!;
-    delegatedId = selectedActivityModel.delegatedId!;
+  void initDetectedActivityModelVals() {
+    delegatedName = (selectedActivityModel.delegatedName == null ? "" : selectedActivityModel.delegatedName!);
+    delegatedId = (selectedActivityModel.delegatedId == null ? "" : selectedActivityModel.delegatedId!);
     selectedActivityModel.delegatedName = null;
     selectedActivityModel.delegatedId = null;
+    invoiceDate = DateFormat('EE MMM dd HH:mm:ss yyyy').format(new DateTime.now());
+  }
+
+  void initReceivedActivitiesModels() async {
+    try {
+      final Database db = await DatabaseHandler.initializeDB();
+      var activityModels = await _distributionProvider.getAllReceivedModelsLocally(UserProvider.currentUser!.id, UserProvider.currentRole!, db);
+      setState(() { suggestedActivityModels = activityModels; });
+    }
+    catch(ex) { }
   }
 
   void onDelegatedByChange(bool value) {
     setState(() {
-      delegatedBy = value!;
+      delegatedBy = value;
       if(value == true) {
-        delegatedNameController.text = delegatedName!;
-        delegatedIdController.text = delegatedId!;
-        selectedActivityModel.delegatedName = delegatedName;
-        selectedActivityModel.delegatedId = delegatedId;
+        delegatedNameController.text = (delegatedName == null ? "" : delegatedName!);
+        delegatedIdController.text = (delegatedId == null ? "" : delegatedId!);
+        selectedActivityModel.delegatedName = (delegatedName == null ? "" : delegatedName!);
+        selectedActivityModel.delegatedId = (delegatedId == null ? "" : delegatedId!);
       }
       else {
         delegatedNameController.text = '';
@@ -810,5 +825,67 @@ class ReadCardController extends ControllerMVC {
 
   void onDelegatedNameChange(String? value) {
     setState(() { selectedActivityModel.delegatedName = value; });
+  }
+
+  void init() {
+    selectedActivityModel = new ActivitiesReceivedModel();
+    selectFamilyCardModel = new FamilyCardModel();
+    message = "NFC_Read".tr();
+    stopNFC();
+    if(connected) {
+      bluetooth.disconnect();
+    }
+    connected = false;
+    identityImgs =[null];
+    cardWithAmount = false;
+    cardWithAmountColor = Colors.black;
+    showCardWithAmount = false;
+    delegatedBy = false;
+    delegatedNameController.text = '';
+    delegatedIdController.text = '';
+    delegatedName = null;
+    delegatedId = null;
+    suggestedActivityController.value = new TextEditingValue(text: '');
+    invoiceDate = '';
+  }
+
+  void onSuggestionSelected(ActivitiesReceivedModel suggestion,showAlert(title, msg, AlertType type)) async {
+    final Database db = await DatabaseHandler.initializeDB();
+    var model = await _distributionProvider.getActivityByFamilyKey(suggestion.key!, UserProvider.currentUser!.id , UserProvider.currentRole!, db);
+    if(model!.received == false) {
+      init();
+      setState(() { selectedActivityModel = model; });
+    }
+    else {
+      setState(() {
+        selectedActivityModel = new ActivitiesReceivedModel();
+        selectFamilyCardModel = new FamilyCardModel();
+      });
+      showAlert('Error'.tr(),'F_C_received_voucher_amount'.tr(), AlertType.error);
+    }
+    setState(() { identityImgs = [null]; showPrint = false; initDetectedActivityModelVals(); });
+    clearSignature();
+  }
+
+  Widget itemsBuilder(context, ActivitiesReceivedModel suggestion) {
+    suggestion = suggestion == null
+        ? new ActivitiesReceivedModel()
+        : suggestion;
+    return new ListTile(
+        leading: Icon(suggestion.received ? Icons.check_circle : Icons.person),
+        title: new Text(suggestion.info1!),
+        iconColor: (suggestion.received ? Colors.green : Colors.grey),
+        subtitle: new Text(suggestion.key! + (suggestion.delegatedName == null ? "" : ((" - ") + suggestion.delegatedName!)))
+    );
+  }
+
+  List<ActivitiesReceivedModel> onSuggestionsCallback(String pattern) {
+    return suggestedActivityModels.where((element) => (element.info1 != null ? element.info1!.contains(pattern) : false) ||
+                                                      (element.info2 != null ? element.info2!.contains(pattern) : false) ||
+                                                      (element.info3 != null ? element.info3!.contains(pattern) : false) ||
+                                                      (element.delegatedName != null ? element.delegatedName!.contains(pattern) : false) ||
+                                                      (element.delegatedId != null ? element.delegatedId!.contains(pattern) : false) ||
+                                                       element.key!.contains(pattern))
+                                  .toList();
   }
 }

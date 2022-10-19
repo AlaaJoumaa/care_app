@@ -1,17 +1,14 @@
 import 'dart:async';
 import 'package:care_app/Controllers/ReadCardController.dart';
 import 'package:care_app/Models/ActivitiesReceivedModel.dart';
-import 'package:care_app/Models/FamilyCardModel.dart';
 import 'package:care_app/Providers/UserProvider.dart';
 import 'package:care_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
-import 'package:intl/intl.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:easy_localization/easy_localization.dart' as easylocal;
-//import 'package:signature/signature.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter_signature_pad/flutter_signature_pad.dart';
@@ -118,10 +115,11 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
   void initState() {
     super.initState();
     con.message = "NFC_Read".tr();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
          con.readNFCData(showAlert);
          con.clearSignature();
          con.initBluePrinter();
+         con.initReceivedActivitiesModels();
     });
   }
 
@@ -140,24 +138,8 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
 
   @override
   void dispose() {
-    con.selectedActivityModel = new ActivitiesReceivedModel();
-    con.selectFamilyCardModel = new FamilyCardModel();
+    con.init();
     con.clearSignature();
-    con.message = "NFC_Read".tr();
-    con.stopNFC();
-    if(con.connected) {
-      con.bluetooth.disconnect();
-    }
-    con.connected = false;
-    con.identityImgs =[null];
-    con.cardWithAmount = false;
-    con.cardWithAmountColor = Colors.black;
-    con.showCardWithAmount = false;
-    con.delegatedBy = false;
-    con.delegatedNameController.text = '';
-    con.delegatedIdController.text = '';
-    con.delegatedName = null;
-    con.delegatedId = null;
     super.dispose();
   }
 
@@ -174,9 +156,10 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
             title: new Align(
                 child: Text("Read_Card".tr()), alignment: Alignment.center),
             automaticallyImplyLeading: false,
-            actions: [ new Padding(padding: EdgeInsets.only(left: 10, right: 10),
-                  child: Icon(
-                      con.connected ? Icons.print : Icons.print_disabled)) ],
+            actions: [
+              new Padding(padding: EdgeInsets.only(left: 10, right: 10),
+                  child: Icon(con.connected ? Icons.print : Icons.print_disabled))
+            ],
             leading: IconButton(
                 icon: Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => onBack()
@@ -186,6 +169,23 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
               child: new Form(
                 child: new Column(
                   children: <Widget>[
+
+                    new Padding(child: new TypeAheadField(
+                        textFieldConfiguration: TextFieldConfiguration(
+                            controller: con.suggestedActivityController,
+                            autofocus: true,
+                            style: DefaultTextStyle.of(context).style.copyWith(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15,height: 1),
+                            decoration: InputDecoration(border: OutlineInputBorder())
+                        ),
+                        suggestionsBoxDecoration: SuggestionsBoxDecoration(elevation: 0.0),
+                        autoFlipDirection: true,
+                        itemBuilder: con.itemsBuilder,
+                        onSuggestionSelected: (ActivitiesReceivedModel suggestion) { con.onSuggestionSelected(suggestion,showAlert); },
+                        suggestionsCallback: con.onSuggestionsCallback,
+                      ),
+                      padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 20, bottom: 0),
+                    ),
+
                     new Padding(child: new Container(
                         child: new Text(
                         con.message, style: new TextStyle(color: Colors.white,
@@ -206,6 +206,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
 
                     con.selectedActivityModel.key!.isNotEmpty ?
                     new Column(children: [
+
                       new Row(children: [
                         Expanded(child:
                         new Padding(child:
@@ -223,11 +224,9 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                                         ),
                                         new Padding(child:
                                             new Row(children: [
-                                          new Expanded(child: new Text('Date'.tr())),
-                                          new Expanded(child: new Text(
-                                              DateFormat('EE MMM dd HH:mm:ss yyyy')
-                                                  .format(new DateTime.now())), flex: 2),
-                                        ]),
+                                                new Expanded(child: new Text('Date'.tr())),
+                                                new Expanded(child: new Text(con.invoiceDate), flex: 2),
+                                              ]),
                                               padding: const EdgeInsets.only(left: 10.0,
                                                 right: 10.0,
                                                 top: 10,
@@ -365,7 +364,7 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                                                 bottom: 10)),
                                         new Row(children: [
                                           new Expanded(child: new Padding(child: new Text(
-                                              con.selectedActivityModel!.payment_USD
+                                              con.selectedActivityModel.payment_USD
                                                   .toString() + "\$", style: TextStyle(
                                               fontSize: ScreenUtil().setSp(15)),
                                               textAlign: (MyApp.currentLang == "en"
@@ -467,8 +466,6 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                             new SizedBox(height: 15),
 
                       ])),padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15, bottom: 0)),
-
-
 
                       new Row(children: [
                         new Expanded(child: new Padding(child: new Card(color: Colors.grey,child: new Container(width: MediaQuery.of(context).size.width,height: 2,)),padding:EdgeInsets.only(top:5,left: 10,right: 10,bottom: 5))),

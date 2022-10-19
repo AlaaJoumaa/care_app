@@ -5,6 +5,7 @@ import 'package:care_app/Models/ActivitiesReceivedCardModel.dart';
 import 'package:care_app/Models/ActivitiesReceivedModel.dart';
 import 'package:care_app/Models/FamilyCardModel.dart';
 import 'package:care_app/Models/OptionModel.dart';
+import 'package:care_app/Providers/UserProvider.dart';
 import 'package:care_app/Utilities/ApiResponse.dart';
 import 'package:care_app/Utilities/Settings.dart';
 import 'package:http/http.dart' as http;
@@ -171,7 +172,7 @@ class DistributionProvider {
       return models;
     }
 
-    Future approve(FamilyCardModel familyCard,String comments, int userId, void Function(int) callback, final Database db) async {
+    Future approve(FamilyCardModel familyCard,String comments, int userId, void Function(int) callback, final Database db,final bool byName) async {
       await db.transaction((txn) async {
         //1- Get the latest activity received id not received for this family.
         var activityReceivedLst = await txn.query("activitiesReceived",
@@ -180,9 +181,15 @@ class DistributionProvider {
                                                   limit: 1);
         if (activityReceivedLst.length > 0) {
           var activityReceived = ActivitiesReceivedModel.sqliteFromJson(activityReceivedLst.first);
-          //2- Check the Card HexId is existed.
           var affectedRows = 0;
-          var familyCardExists = await txn.query('familyCards', where: 'hexId = ?', whereArgs: [familyCard.hexId]);
+          var familyCardExists = [];
+          if(!byName) {//2- Check the Card HexId is existed.
+            familyCardExists = await txn.query('familyCards', where: 'hexId = ?', whereArgs: [familyCard.hexId]);
+          }
+          else {//3- Check the Card familyKey is existed.
+            familyCardExists = await txn.query('familyCards', where: 'familyKey = ?', whereArgs: [familyCard.familyKey]);
+          }
+          //
           if (familyCardExists.length == 0) {//The family card hasn't been added.
             callback(-5);
             return;
@@ -268,11 +275,28 @@ class DistributionProvider {
         String query ='';
         if(permission == Permissions.MealCheck.index) {
           /*STRFTIME('%d/%m/%Y', Date(distibution_date)) = STRFTIME('%d/%m/%Y', Date('now')) AND*/
-          query = "SELECT * FROM activitiesReceived WHERE mealUser =" + userid.toString();
+          query = "SELECT " + ActivitiesReceivedModel.selectWithoutImg + " FROM activitiesReceived WHERE mealUser =" + userid.toString();
         }
         else {
           /*STRFTIME('%d/%m/%Y', Date(distibution_date)) = STRFTIME('%d/%m/%Y', Date('now')) AND*/
-          query = "SELECT * FROM activitiesReceived WHERE userid =" + userid.toString();
+          query = "SELECT " + ActivitiesReceivedModel.selectWithoutImg + " FROM activitiesReceived WHERE userid =" + userid.toString();
+        }
+        List rows = await db.rawQuery(query);
+        result =  rows.map((elem) => ActivitiesReceivedModel.sqliteFromJson(elem)).toList();
+      }
+      catch (ex) { }
+      return result;
+    }
+
+    Future<List<ActivitiesReceivedModel>> getUnReceivedModelsLocally(int userid,int permission,final Database db) async {
+      List<ActivitiesReceivedModel> result = [];
+      try {
+        String query ='';
+        if(permission == Permissions.MealCheck.index) {
+          query = "SELECT * FROM activitiesReceived WHERE mealUser =" + userid.toString() + " AND received = 0";
+        }
+        else {
+          query = "SELECT * FROM activitiesReceived WHERE userid =" + userid.toString() + " AND received = 0";
         }
         List rows = await db.rawQuery(query);
         result =  rows.map((elem) => ActivitiesReceivedModel.sqliteFromJson(elem)).toList();

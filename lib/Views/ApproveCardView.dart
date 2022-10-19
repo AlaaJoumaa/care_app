@@ -8,6 +8,7 @@ import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:easy_localization/easy_localization.dart' as easylocal;
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 
 class ApproveCardView extends StatefulWidget {
@@ -18,11 +19,11 @@ class ApproveCardView extends StatefulWidget {
 class _ApproveCardViewState extends StateMVC<ApproveCardView> {
 
   bool alertOpened = false;
-  late NewCardController con;
+  late ApproveCardController con;
 
-  _ApproveCardViewState() : super(NewCardController()) {
+  _ApproveCardViewState() : super(ApproveCardController()) {
 
-    con = controller as NewCardController;
+    con = controller as ApproveCardController;
   }
 
   void showAlert(title,msg, AlertType type) {
@@ -85,8 +86,9 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       con.readNFCData(showAlert);
+      con.initReceivedActivitiesModels();
     });
   }
 
@@ -101,11 +103,7 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
 
   @override
   void dispose() {
-    con.selectedModel = new ActivitiesReceivedModel();
-    con.familyCard = new FamilyCardModel();
-    con.cardIdentifier = '';
-    con.commentController.clear();
-    con.stopNFC();
+    con.init();
     super.dispose();
   }
 
@@ -132,9 +130,25 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
           child: new Form(
             child: new Column(
               children: <Widget>[
+
+                  new Padding(child: new TypeAheadField(
+                      textFieldConfiguration: TextFieldConfiguration(
+                          controller: con.suggestedActivityController,
+                          autofocus: true,
+                          style: DefaultTextStyle.of(context).style.copyWith(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15,height: 1),
+                          decoration: InputDecoration(border: OutlineInputBorder())
+                      ),
+                      suggestionsBoxDecoration: SuggestionsBoxDecoration(elevation: 0.0),
+                      autoFlipDirection: true,
+                      itemBuilder: con.itemsBuilder,
+                      onSuggestionSelected: (ActivitiesReceivedModel suggestion) { con.onSuggestionSelected(suggestion,showAlert); },
+                      suggestionsCallback: con.onSuggestionsCallback,
+                    ),
+                    padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 20, bottom: 0),
+                  ),
+
                   new Row(children: [
-                    new Expanded(child:
-                    new Padding(child: new Container(
+                    new Expanded(child: new Padding(child: new Container(
                         child: new Text(
                             "NFC_Activation".tr(), style: new TextStyle(color: Colors.white,
                             fontSize: 18,
@@ -153,20 +167,22 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
                     ))
                   ]),
 
-                  con.selectedModel.key!.isNotEmpty ?
+                  con.selectedActivityModel.key!.isNotEmpty ?
                     new Column(children: [
-
-                        con.cardIdentifier!.isNotEmpty ?
+                        //con.cardIdentifier.isNotEmpty ?
+                      //con.selectFamilyCardModel.hexId!.isNotEmpty ?
                         new Padding(child: new Card(color: Colors.white70,
                           child: new Column(children: [
                             new Row(children: [
                               Expanded(child: new Padding(child:new Text('Card_Info'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: ScreenUtil().setSp(20),),),
                                   padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)))
                             ]),
+
                             new Row(children: [
                               Expanded(child: new Padding(child:new Text('Hex_Id'.tr() + ': ' + con.cardIdentifier,textAlign: TextAlign.center,style: TextStyle(color: Colors.black,fontSize: ScreenUtil().setSp(20),),),
                                   padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)))
                             ]),
+
                             new Row(children: [
                               Expanded(child: new Padding(child: new RaisedButton(
                                 color: Color.fromRGBO(28, 29, 48, 1),
@@ -175,8 +191,8 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
                               ),padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 5)))
                             ])
                           ]),
-                        ), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0))
-                        : new SizedBox(),
+                        ), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)),
+                        //: new SizedBox(),
 
                         new Row(children: [
                           new Expanded(child:
@@ -185,22 +201,27 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
                                     new Card(color: Colors.white70,
                                       child: new Column(children: [
                                                 new Row(children: [
-                                                  new Expanded(child:new Padding(child: new Text('Card_Num'.tr() + ': '+ con.familyCard.sn!.toString(),style: TextStyle(fontSize: ScreenUtil().setSp(15))), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
+                                                  new Expanded(child:new Padding(child: new Text('Card_Num'.tr() + ': '+ con.selectFamilyCardModel.sn.toString(),style: TextStyle(fontSize: ScreenUtil().setSp(15))), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
                                                 ]),
+
                                                 new Row(children: [
-                                                  new Expanded(child:new Padding(child: new Text('Family_Key'.tr() + ': '+ con.selectedModel.key!,style: TextStyle(fontSize: ScreenUtil().setSp(15))), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
+                                                  new Expanded(child:new Padding(child: new Text('Family_Key'.tr() + ': '+ con.selectedActivityModel.key!,style: TextStyle(fontSize: ScreenUtil().setSp(15))), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
                                                 ]),
+
                                                 new Row(children: [
-                                                  new Expanded(child:new Padding(child: new Text('Info_1'.tr() + ': ' + con.selectedModel.info1!,style: TextStyle(fontSize: ScreenUtil().setSp(15),fontWeight: FontWeight.bold)), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
+                                                  new Expanded(child:new Padding(child: new Text('Info_1'.tr() + ': ' + con.selectedActivityModel.info1!,style: TextStyle(fontSize: ScreenUtil().setSp(15),fontWeight: FontWeight.bold)), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
                                                 ]),
+
                                                 new Row(children: [
-                                                  new Expanded(child: new Padding(child:  new Text('Info_2'.tr() + ': ' + con.selectedModel.info2!,style: TextStyle(fontSize: ScreenUtil().setSp(15),fontWeight: FontWeight.bold)), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
+                                                  new Expanded(child: new Padding(child:  new Text('Info_2'.tr() + ': ' + con.selectedActivityModel.info2!,style: TextStyle(fontSize: ScreenUtil().setSp(15),fontWeight: FontWeight.bold)), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
                                                 ]),
+
                                                 new Row(children: [
-                                                  new Expanded(child:new Padding(child: new Text('Info 3'.tr() + ': ' + con.selectedModel.info3!,style: TextStyle(fontSize: ScreenUtil().setSp(15),fontWeight: FontWeight.bold)), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
+                                                  new Expanded(child:new Padding(child: new Text('Info 3'.tr() + ': ' + con.selectedActivityModel.info3!,style: TextStyle(fontSize: ScreenUtil().setSp(15),fontWeight: FontWeight.bold)), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
                                                 ]),
+
                                                 new Row(children: [
-                                                  new Expanded(child:new Padding(child: new Text('Payment_USD'.tr() + ': ' + (con.selectedModel.payment_USD!.toString() + 'USD'.tr()),style: TextStyle(fontSize: ScreenUtil().setSp(15),fontWeight: FontWeight.bold,color: Colors.green)), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
+                                                  new Expanded(child:new Padding(child: new Text('Payment_USD'.tr() + ': ' + (con.selectedActivityModel.payment_USD!.toString() + 'USD'.tr()),style: TextStyle(fontSize: ScreenUtil().setSp(15),fontWeight: FontWeight.bold,color: Colors.green)), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 10))),
                                                 ]),
                                           ])
                                     ),

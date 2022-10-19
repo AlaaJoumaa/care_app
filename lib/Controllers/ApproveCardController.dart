@@ -1,3 +1,4 @@
+import 'package:care_app/Enums/Permissions.dart';
 import 'package:care_app/Models/ActivitiesReceivedModel.dart';
 import 'package:care_app/Models/FamilyCardModel.dart';
 import 'package:care_app/Providers/DistributionProvider.dart';
@@ -11,44 +12,40 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:easy_localization/easy_localization.dart' as easylocal;
 
-class NewCardController extends ControllerMVC {
+class ApproveCardController extends ControllerMVC {
 
-   factory NewCardController([StateMVC? state]) => _this ??= NewCardController._(state);
+   factory ApproveCardController([StateMVC? state]) => _this ??= ApproveCardController._(state);
 
-   NewCardController._(StateMVC? state) :
+   ApproveCardController._(StateMVC? state) :
          _distributionProvider = new DistributionProvider(),
          _nfcProvider = new NFCProvider(),
-         selectedModel = new ActivitiesReceivedModel(),
+         selectedActivityModel = new ActivitiesReceivedModel(),
          _familyCardProvider = new FamilyCardProvider(),
          commentController = new TextEditingController(),
-         familyCard = new FamilyCardModel(),
+         selectFamilyCardModel = new FamilyCardModel(),
+         suggestedActivityController = new TextEditingController(),
          cardIdentifier = '',
          super(state);
 
-   static NewCardController? _this;
+   static ApproveCardController? _this;
    DistributionProvider _distributionProvider;
    FamilyCardProvider _familyCardProvider;
    NFCProvider _nfcProvider;
-   ActivitiesReceivedModel selectedModel;
-   FamilyCardModel familyCard;
+   ActivitiesReceivedModel selectedActivityModel;
+   FamilyCardModel selectFamilyCardModel;
    String cardIdentifier = '';
    TextEditingController commentController;
 
-   // void readData(int code,String message,showAlert(title,msg, AlertType type)) async {
-   //   try {
-   //     final Database db = await DatabaseHandler.initializeDB();
-   //
-   //   }
-   //   catch(ex) {
-   //     showAlert('Error'.tr(),'An_Error'.tr() + ": $ex, Please re-enter this page again.",AlertType.error);
-   //   }
-   // }
+   List<ActivitiesReceivedModel> suggestedActivityModels = [];
+   TextEditingController suggestedActivityController;
+   bool _searchByName = false;
+
 
    void approve(showAlert(title,msg, AlertType type)) async {
        try{
          final Database db = await DatabaseHandler.initializeDB();
          var familyCard = new FamilyCardModel();
-         familyCard.familyKey = selectedModel.key;
+         familyCard.familyKey = selectedActivityModel.key;
          familyCard.hexId = cardIdentifier;
          //Approve the card.
          await _distributionProvider.approve(familyCard, commentController.value.text,
@@ -59,7 +56,7 @@ class NewCardController extends ControllerMVC {
                                                case 1:
                                                  setState(() {
                                                     cardIdentifier = '';
-                                                    selectedModel = new ActivitiesReceivedModel();
+                                                    selectedActivityModel = new ActivitiesReceivedModel();
                                                     familyCard = new FamilyCardModel();
                                                  });
                                                   showAlert('Success'.tr(),'Card_Approved_Successfully'.tr(),AlertType.success);
@@ -72,7 +69,7 @@ class NewCardController extends ControllerMVC {
                                                break;
                                              }
                                              await db.close();
-                                         }, db);
+                                         }, db,_searchByName);
          readNFCData(showAlert);
        }
        catch(ex) {
@@ -101,10 +98,10 @@ class NewCardController extends ControllerMVC {
                                                                                       db);
                if(activityReceived != null) {
                  commentController.clear();
-                 setState(() { selectedModel = activityReceived; familyCard = familyCardModel; });
+                 setState(() { selectedActivityModel = activityReceived; selectFamilyCardModel = familyCardModel; });
                  switch (code) {
                    case 1:
-                     setState(() { cardIdentifier = message; });
+                     setState(() { cardIdentifier = message; _searchByName = false; });
                      break;
                    case -4:
                      showAlert('Error'.tr(), 'Not_Supported_Card_Msg'.tr(), AlertType.error);
@@ -119,7 +116,7 @@ class NewCardController extends ControllerMVC {
                                                                              UserProvider.currentUser!.id,
                                                                              UserProvider.currentRole!,
                                                                              db);
-                 if(ar != null && !ar!.mealChecked!.isEmpty) {
+                 if(ar != null && ar.mealChecked != null && !ar.mealChecked!.isEmpty) {
                    //Activity has been received before.
                    showAlert('Error'.tr(),'F_C_received_voucher_amount'.tr(), AlertType.error);
                  }
@@ -148,4 +145,88 @@ class NewCardController extends ControllerMVC {
        readNFCData(showAlert);
      });
    }
+
+
+
+
+   //*********** Search by name functions ***********
+
+   Widget itemsBuilder(context, ActivitiesReceivedModel suggestion) {
+     suggestion = suggestion == null
+         ? new ActivitiesReceivedModel()
+         : suggestion;
+     return new ListTile(
+         leading: Icon(suggestion.mealChecked != null ? Icons.check_circle : Icons.person),
+         title: new Text(suggestion.info1!),
+         iconColor: (suggestion.mealChecked != null ? Colors.green : Colors.grey),
+         subtitle: new Text(suggestion.key! + (suggestion.delegatedName == null ? "" : ((" - ") + suggestion.delegatedName!)))
+     );
+   }
+
+   void onSuggestionSelected(ActivitiesReceivedModel suggestion,showAlert(title, msg, AlertType type)) async {
+     final Database db = await DatabaseHandler.initializeDB();
+     var model = await _distributionProvider.getActivityByFamilyKey(suggestion.key!, UserProvider.currentUser!.id , UserProvider.currentRole!, db);
+     if(UserProvider.currentRole == Permissions.Distributioner.index) {
+       if (model!.received == false) {
+         init();
+         setState(() {
+           selectedActivityModel = model;
+         });
+       }
+       else {
+         setState(() {
+           selectedActivityModel = new ActivitiesReceivedModel();
+           selectFamilyCardModel = new FamilyCardModel();
+         });
+         showAlert(
+             'Error'.tr(), 'F_C_received_voucher_amount'.tr(), AlertType.error);
+       }
+     }
+     else if(UserProvider.currentRole == Permissions.MealCheck.index) {
+       if(model!.mealChecked == null) {
+         init();
+         setState(() {
+           selectedActivityModel = model;
+         });
+       }
+       else {
+         setState(() {
+           selectedActivityModel = new ActivitiesReceivedModel();
+           selectFamilyCardModel = new FamilyCardModel();
+         });
+         showAlert('Error'.tr(),'F_C_received_voucher_amount'.tr(), AlertType.error);
+       }
+     }
+     setState(() { _searchByName = true; });
+   }
+
+   void init() {
+     selectedActivityModel = new ActivitiesReceivedModel();
+     selectFamilyCardModel = new FamilyCardModel();
+     cardIdentifier = '';
+     commentController.clear();
+     stopNFC();
+   }
+
+   List<ActivitiesReceivedModel> onSuggestionsCallback(String pattern) {
+     return suggestedActivityModels.where((element) => (element.info1 != null ? element.info1!.contains(pattern) : false) ||
+         (element.info2 != null ? element.info2!.contains(pattern) : false) ||
+         (element.info3 != null ? element.info3!.contains(pattern) : false) ||
+         (element.delegatedName != null ? element.delegatedName!.contains(pattern) : false) ||
+         (element.delegatedId != null ? element.delegatedId!.contains(pattern) : false) ||
+         element.key!.contains(pattern))
+         .toList();
+   }
+
+   void initReceivedActivitiesModels() async {
+     try {
+       final Database db = await DatabaseHandler.initializeDB();
+       var activityModels = await _distributionProvider.getAllReceivedModelsLocally(UserProvider.currentUser!.id, UserProvider.currentRole!, db);
+       setState(() { suggestedActivityModels = activityModels; });
+     }
+     catch(ex) { }
+   }
+
+   //************************************************
+
 }

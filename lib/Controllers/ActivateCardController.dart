@@ -154,7 +154,7 @@ class ActivateCardController extends ControllerMVC {
           range.add(i);
         }
         //2- Remove the missings.
-        for (int i = 0; i < UserProvider.currentRange!.missing.length!; i++) {
+        for (int i = 0; i < UserProvider.currentRange!.missing.length; i++) {
           var elements = range.where((element) =>
           element == UserProvider.currentRange!.missing[i])
               .toList();

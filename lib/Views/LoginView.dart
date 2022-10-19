@@ -37,7 +37,7 @@ class _LoginViewState extends StateMVC<LoginView> {
     @override
     void initState() {
       super.initState();
-      WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         initHeight();
         con.initDatabase();
       });
