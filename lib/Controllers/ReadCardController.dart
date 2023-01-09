@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:typed_data';
 import 'dart:ui';
-import 'package:care_app/main.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:care_app/Models/ActivitiesReceivedModel.dart';
 import 'package:care_app/Models/FamilyCardModel.dart';
@@ -15,12 +12,10 @@ import 'package:care_app/Providers/NFCProvider.dart';
 import 'package:care_app/Providers/UserProvider.dart';
 import 'package:care_app/Services/DatabaseHandler.dart';
 import 'package:flutter/material.dart';
-import 'package:dotted_line/dotted_line.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:easy_localization/easy_localization.dart' as easylocal;
-//import 'package:signature/signature.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/services.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
@@ -65,6 +60,7 @@ class ReadCardController extends ControllerMVC {
   FamilyCardModel selectFamilyCardModel;
   List<Uint8List?> identityImgs = [null];
   final signature = GlobalKey<SignatureState>();
+  Color signColor = Colors.black;
   bool showPrint = false;
   bool cardWithAmount = false;
   Color cardWithAmountColor = Colors.black;
@@ -85,6 +81,7 @@ class ReadCardController extends ControllerMVC {
     if(sign != null) {
       sign.clear();
     }
+    setState(() { signColor = Colors.black; });
   }
 
   // Widget getEnInvoice() {
@@ -635,13 +632,14 @@ class ReadCardController extends ControllerMVC {
                                                        db);
       if (result) {
         await _saveInvoiceImage(showAlert);
+        initReceivedActivitiesModels();//Refresh the names list.
         showAlert('Success'.tr(), 'Activity_Received'.tr(), AlertType.success);
-        //setState(() {
-          //selectedActivityModel = new ActivitiesReceivedModel();
-          //selectFamilyCardModel = new FamilyCardModel();
-        //});
-        //clearSignature();
-        setState(() { showPrint = true; });
+        // setState(() {
+        //   selectedActivityModel = new ActivitiesReceivedModel();
+        //   selectFamilyCardModel = new FamilyCardModel();
+        // });
+        // clearSignature();
+        setState(() { showPrint = true; signColor = Colors.white; });
       }
       else {
         showAlert('Error'.tr(), "No_Cash_For_F_C".tr(), AlertType.error);
@@ -661,8 +659,9 @@ class ReadCardController extends ControllerMVC {
     try {
       if (connected) {
         var bytes = await _saveInvoiceImage(showAlert);
-        if(bytes == null) {
-          showAlert('Error'.tr(),"Can't_generate_invoice".tr(),AlertType.error);
+        if (bytes == null) {
+          showAlert(
+              'Error'.tr(), "Can't_generate_invoice".tr(), AlertType.error);
         }
         else {
           bluetooth.printImageBytes(bytes);
@@ -831,11 +830,6 @@ class ReadCardController extends ControllerMVC {
     selectedActivityModel = new ActivitiesReceivedModel();
     selectFamilyCardModel = new FamilyCardModel();
     message = "NFC_Read".tr();
-    stopNFC();
-    if(connected) {
-      bluetooth.disconnect();
-    }
-    connected = false;
     identityImgs =[null];
     cardWithAmount = false;
     cardWithAmountColor = Colors.black;
@@ -847,6 +841,7 @@ class ReadCardController extends ControllerMVC {
     delegatedId = null;
     suggestedActivityController.value = new TextEditingValue(text: '');
     invoiceDate = '';
+    signColor = Colors.black;
   }
 
   void onSuggestionSelected(ActivitiesReceivedModel suggestion,showAlert(title, msg, AlertType type)) async {
@@ -863,6 +858,12 @@ class ReadCardController extends ControllerMVC {
       });
       showAlert('Error'.tr(),'F_C_received_voucher_amount'.tr(), AlertType.error);
     }
+    var existedModels = await _familyCardProvider.getFamilyCardModelsByActivityId(selectedActivityModel.id, db);
+    if(existedModels.length > 0) {
+      setState(() {
+        selectFamilyCardModel = existedModels.first;
+      });
+    }
     setState(() { identityImgs = [null]; showPrint = false; initDetectedActivityModelVals(); });
     clearSignature();
   }
@@ -873,7 +874,11 @@ class ReadCardController extends ControllerMVC {
         : suggestion;
     return new ListTile(
         leading: Icon(suggestion.received ? Icons.check_circle : Icons.person),
-        title: new Text(suggestion.info1!),
+        title: new Column(children: [
+            new Row(children: [new Text(suggestion.info1!)]),
+            new Row(children: [new Text(suggestion.info2!)])//,
+            //new Row(children: [new Text(suggestion.info3!)])
+        ]),
         iconColor: (suggestion.received ? Colors.green : Colors.grey),
         subtitle: new Text(suggestion.key! + (suggestion.delegatedName == null ? "" : ((" - ") + suggestion.delegatedName!)))
     );
@@ -882,7 +887,7 @@ class ReadCardController extends ControllerMVC {
   List<ActivitiesReceivedModel> onSuggestionsCallback(String pattern) {
     return suggestedActivityModels.where((element) => (element.info1 != null ? element.info1!.contains(pattern) : false) ||
                                                       (element.info2 != null ? element.info2!.contains(pattern) : false) ||
-                                                      (element.info3 != null ? element.info3!.contains(pattern) : false) ||
+                                                      //(element.info3 != null ? element.info3!.contains(pattern) : false) ||
                                                       (element.delegatedName != null ? element.delegatedName!.contains(pattern) : false) ||
                                                       (element.delegatedId != null ? element.delegatedId!.contains(pattern) : false) ||
                                                        element.key!.contains(pattern))

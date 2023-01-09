@@ -121,5 +121,7 @@
     "identity_Images_required": "Identity image is required",
     "Delegated_Id": "Delegated Id",
     "Delegated_Name": "Delegated name",
-    "Delegated_By": "Delegated by"
+    "Delegated_By": "Delegated by",
+    "F_C_approved_voucher_amount": "The card has been verified before.",
+    "Internet_Conn": "Please check your internet connection"
 }

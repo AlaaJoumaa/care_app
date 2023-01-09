@@ -40,7 +40,6 @@ class ApproveCardController extends ControllerMVC {
    TextEditingController suggestedActivityController;
    bool _searchByName = false;
 
-
    void approve(showAlert(title,msg, AlertType type)) async {
        try{
          final Database db = await DatabaseHandler.initializeDB();
@@ -59,10 +58,11 @@ class ApproveCardController extends ControllerMVC {
                                                     selectedActivityModel = new ActivitiesReceivedModel();
                                                     familyCard = new FamilyCardModel();
                                                  });
-                                                  showAlert('Success'.tr(),'Card_Approved_Successfully'.tr(),AlertType.success);
+                                                 initReceivedActivitiesModels();//Refresh the names list.
+                                                 showAlert('Success'.tr(),'Card_Approved_Successfully'.tr(),AlertType.success);
                                                break;
                                                case -1:
-                                                  showAlert('Error'.tr(),"Can't_Approve_The_Card_Msg".tr(),AlertType.error);
+                                                 showAlert('Error'.tr(),"Can't_Approve_The_Card_Msg".tr(),AlertType.error);
                                                break;
                                                case -5:
                                                  showAlert('Error'.tr(),"No_Activities_Receive".tr(),AlertType.error);
@@ -118,7 +118,7 @@ class ApproveCardController extends ControllerMVC {
                                                                              db);
                  if(ar != null && ar.mealChecked != null && !ar.mealChecked!.isEmpty) {
                    //Activity has been received before.
-                   showAlert('Error'.tr(),'F_C_received_voucher_amount'.tr(), AlertType.error);
+                   showAlert('Error'.tr(),'F_C_approved_voucher_amount'.tr(), AlertType.error);
                  }
                  else {
                    //No activity assigned to this family.
@@ -146,9 +146,6 @@ class ApproveCardController extends ControllerMVC {
      });
    }
 
-
-
-
    //*********** Search by name functions ***********
 
    Widget itemsBuilder(context, ActivitiesReceivedModel suggestion) {
@@ -157,7 +154,11 @@ class ApproveCardController extends ControllerMVC {
          : suggestion;
      return new ListTile(
          leading: Icon(suggestion.mealChecked != null ? Icons.check_circle : Icons.person),
-         title: new Text(suggestion.info1!),
+         title: new Column(children: [
+           new Row(children: [new Text(suggestion.info1!)]),
+           new Row(children: [new Text(suggestion.info2!)])//,
+           //new Row(children: [new Text(suggestion.info3!)])
+         ]),
          iconColor: (suggestion.mealChecked != null ? Colors.green : Colors.grey),
          subtitle: new Text(suggestion.key! + (suggestion.delegatedName == null ? "" : ((" - ") + suggestion.delegatedName!)))
      );
@@ -165,6 +166,7 @@ class ApproveCardController extends ControllerMVC {
 
    void onSuggestionSelected(ActivitiesReceivedModel suggestion,showAlert(title, msg, AlertType type)) async {
      final Database db = await DatabaseHandler.initializeDB();
+     //Get activity received model.
      var model = await _distributionProvider.getActivityByFamilyKey(suggestion.key!, UserProvider.currentUser!.id , UserProvider.currentRole!, db);
      if(UserProvider.currentRole == Permissions.Distributioner.index) {
        if (model!.received == false) {
@@ -197,6 +199,13 @@ class ApproveCardController extends ControllerMVC {
          showAlert('Error'.tr(),'F_C_received_voucher_amount'.tr(), AlertType.error);
        }
      }
+     //Get family cards.
+     var existedModels = await _familyCardProvider.getFamilyCardModelsByActivityId(selectedActivityModel.id, db);
+     if(existedModels.length > 0) {
+       setState(() {
+         selectFamilyCardModel = existedModels.first;
+       });
+     }
      setState(() { _searchByName = true; });
    }
 
@@ -211,7 +220,7 @@ class ApproveCardController extends ControllerMVC {
    List<ActivitiesReceivedModel> onSuggestionsCallback(String pattern) {
      return suggestedActivityModels.where((element) => (element.info1 != null ? element.info1!.contains(pattern) : false) ||
          (element.info2 != null ? element.info2!.contains(pattern) : false) ||
-         (element.info3 != null ? element.info3!.contains(pattern) : false) ||
+         //(element.info3 != null ? element.info3!.contains(pattern) : false) ||
          (element.delegatedName != null ? element.delegatedName!.contains(pattern) : false) ||
          (element.delegatedId != null ? element.delegatedId!.contains(pattern) : false) ||
          element.key!.contains(pattern))

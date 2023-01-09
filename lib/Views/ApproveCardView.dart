@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:care_app/Controllers/ApproveCardController.dart';
 import 'package:care_app/Models/ActivitiesReceivedModel.dart';
-import 'package:care_app/Models/FamilyCardModel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
@@ -169,30 +168,28 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
 
                   con.selectedActivityModel.key!.isNotEmpty ?
                     new Column(children: [
-                        //con.cardIdentifier.isNotEmpty ?
-                      //con.selectFamilyCardModel.hexId!.isNotEmpty ?
-                        new Padding(child: new Card(color: Colors.white70,
-                          child: new Column(children: [
-                            new Row(children: [
-                              Expanded(child: new Padding(child:new Text('Card_Info'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: ScreenUtil().setSp(20),),),
-                                  padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)))
-                            ]),
 
-                            new Row(children: [
-                              Expanded(child: new Padding(child:new Text('Hex_Id'.tr() + ': ' + con.cardIdentifier,textAlign: TextAlign.center,style: TextStyle(color: Colors.black,fontSize: ScreenUtil().setSp(20),),),
-                                  padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)))
-                            ]),
-
-                            new Row(children: [
-                              Expanded(child: new Padding(child: new RaisedButton(
-                                color: Color.fromRGBO(28, 29, 48, 1),
-                                onPressed:() { showConfAlert('Approve confirmation'.tr(),'Approve_Confirmation_Msg'.tr(),AlertType.warning); },//=> onLoginPressed(),
-                                child: Text('Approve'.tr(), style: TextStyle(color: Colors.white, fontSize: ScreenUtil().setSp(25))),
-                              ),padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 5)))
-                            ])
-                          ]),
-                        ), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)),
-                        //: new SizedBox(),
+                        con.selectFamilyCardModel.hexId!.isNotEmpty ?
+                          new Padding(child: new Card(color: Colors.white70,
+                            child: new Column(children: [
+                                new Row(children: [
+                                  Expanded(child: new Padding(child:new Text('Card_Info'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: ScreenUtil().setSp(20),),),
+                                      padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)))
+                                ]),
+                                new Row(children: [
+                                  Expanded(child: new Padding(child:new Text('Hex_Id'.tr() + ': ' + con.selectFamilyCardModel.hexId!,textAlign: TextAlign.center,style: TextStyle(color: Colors.black,fontSize: ScreenUtil().setSp(20),),),
+                                      padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0)))
+                                ]),
+                                new Row(children: [
+                                  Expanded(child: new Padding(child: new RaisedButton(
+                                    color: Color.fromRGBO(28, 29, 48, 1),
+                                    onPressed:() { showConfAlert('Approve confirmation'.tr(),'Approve_Confirmation_Msg'.tr(),AlertType.warning); },//=> onLoginPressed(),
+                                    child: Text('Approve'.tr(), style: TextStyle(color: Colors.white, fontSize: ScreenUtil().setSp(25))),
+                                  ),padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 5)))
+                                ])
+                              ]),
+                            ), padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 10, bottom: 0))
+                        : new SizedBox(),
 
                         new Row(children: [
                           new Expanded(child:
@@ -233,6 +230,7 @@ class _ApproveCardViewState extends StateMVC<ApproveCardView> {
                         new Padding(child: new Row(children: [
                           new Expanded(child: TextFormField(
                             controller: con.commentController,
+                            initialValue: con.selectedActivityModel.comments,
                             inputFormatters: [LengthLimitingTextInputFormatter(255)],
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),

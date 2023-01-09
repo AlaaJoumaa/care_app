@@ -120,5 +120,7 @@
   "identity_Images_required": "يرجى إدخال صورة الهوية",
   "Delegated_Id": "رقم الشخص المفوض",
   "Delegated_Name": "اسم الشخص المفوض",
-  "Delegated_By": "تفويض"
+  "Delegated_By": "تفويض",
+  "F_C_approved_voucher_amount": "هذه البطاقة قد تمت الموافقة عليها سابقا.",
+  "Internet_Conn": "لا يوجد اتصال بالانترنت"
 }

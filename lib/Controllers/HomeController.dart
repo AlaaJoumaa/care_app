@@ -4,7 +4,6 @@ import 'package:care_app/Enums/SettingKeys.dart';
 import 'package:care_app/Models/ActivitiesReceivedModel.dart';
 import 'package:care_app/Models/DelegateOptionModel.dart';
 import 'package:care_app/Models/FamilyCardModel.dart';
-import 'package:care_app/Models/OptionModel.dart';
 import 'package:care_app/Providers/DistributionProvider.dart';
 import 'package:care_app/Providers/FamilyCardProvider.dart';
 import 'package:care_app/Providers/UserProvider.dart';
@@ -45,7 +44,7 @@ class HomeController extends ControllerMVC {
     try {
       setState(() { status_Msg += ('\n' + 'Remove_UnReceived_Activities_Locally'.tr()); });
       await _distributionProvider.removeUnReceivedActivitiesLocally(
-          UserProvider.currentUser!.id, db);
+          UserProvider.currentUser!.id, UserProvider.currentRole!, db);
     }
     catch(ex) { status_Msg += ('\n' + 'ERROR: $ex'); }
   }
@@ -246,15 +245,11 @@ class HomeController extends ControllerMVC {
       setState(() {
         status_Msg += ('\n' + 'Uploading_F_C'.tr());
       });
-      var result = await _familyCardProvider.postFamilyCardModels(
-          familyCardModels,
-          UserProvider.currentRole!,
-          UserProvider.currentUser!.token!);
+      var result = await _familyCardProvider.postFamilyCardModels(familyCardModels,
+                                                                  UserProvider.currentRole!,
+                                                                  UserProvider.currentUser!.token!);
       if (result.item2 == 401) { //Unauthorized access.
-        setState(() {
-          status_Msg +=
-          ('\n' + 'Unauthorized_Access'.tr());
-        });
+        setState(() { status_Msg += ('\n' + 'Unauthorized_Access'.tr()); });
       }
       setState(() {
         status_Msg += ('\n' + (result.item1.success ?
@@ -298,6 +293,10 @@ class HomeController extends ControllerMVC {
 
   void onSyncPressed() async {
     try {
+      if(!await checkInternetConnection()) {
+        setState(() { status_Msg = "Internet_Conn".tr(); });
+        return;
+      }
       final Database db = await DatabaseHandler.initializeDB();
       setState(() { status_Msg = ''; isDisabled = true; });
       //*********** Upload section ***********/
@@ -317,14 +316,13 @@ class HomeController extends ControllerMVC {
       setState(() { status_Msg += ('\n' + 'Uploading_Activities'.tr()); });
       var statusMessage = ('\n' + status_Msg + '\n');
       var savedCount = 0;
-      for (var i = 0; i < receivedCount; i += pageSize) { //Uploading (page size) of records.
+      for (var i = 0; i < receivedCount; i += pageSize) {
+        //Uploading (page size) of records.
         //4- Get the local models has been done received.
-        var activitiesReceivedModels = await _getLocalReceivedModels(
-            db, 0, pageSize);
+        var activitiesReceivedModels = await _getLocalReceivedModels(db, 0, pageSize);
         if (activitiesReceivedModels.length == 0) { break; }
         //5- Uploading (datesend=now()) the received models.
-        var hasUploaded = await _uploadReceivedModels(
-            activitiesReceivedModels);
+        var hasUploaded = await _uploadReceivedModels(activitiesReceivedModels);
         if (hasUploaded) {
           //6- Send activities received data.
           var sentCount = await _sendActivitiesReceivedLocally(
@@ -342,7 +340,7 @@ class HomeController extends ControllerMVC {
 
       //*********** Remove section ***********
 
-      await _removeUnReceivedActivitiesLocally(db);
+      await _removeUnReceivedActivitiesLocally(db);//Need to change it.
 
       //*********** Download section *********
 
@@ -425,6 +423,31 @@ class HomeController extends ControllerMVC {
     }
   }
 
+  // if(downloadedReceivedModels.length == 0) {
+  //   stopSync(db);
+  //   return;
+  // }
+
+  // void stopSync(final Database db) {
+  //   try {
+  //     setState(() {
+  //       isDisabled = false;
+  //     });
+  //     if (db.isOpen) {
+  //       db.close();
+  //     }
+  //     setState(() {
+  //       status_Msg += '\n' + 'Sync_Done'.tr();
+  //     });
+  //   }
+  //   catch (ex) {
+  //     setState(() {
+  //       status_Msg += "An_Error".tr() + ': $ex';
+  //       isDisabled = false;
+  //     });
+  //   }
+  // }
+
   void logout() async {
     try {
       final homeState = stateOf<HomeView>();
@@ -467,15 +490,17 @@ class HomeController extends ControllerMVC {
     } catch (err) { }
   }
 
-  Future<void> checkInternetConnection() async {
+  Future<bool> checkInternetConnection() async {
     try {
       final response = await InternetAddress.lookup('www.google.com');
       if (response.isNotEmpty) {
         setState(() { hasInternet = true; });
+        return true;
       }
     } on SocketException catch (err) {
       setState(() { hasInternet = false; });
     }
+    return false;
   }
 
   Future<void> checkNfc() async {

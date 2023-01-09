@@ -88,6 +88,16 @@ class FamilyCardProvider {
     return existedModels;
   }
 
+  Future<List<FamilyCardModel>> getFamilyCardModelsByActivityId(int actitivtyId,final Database db) async {
+    List<FamilyCardModel> existedModels = [];
+    try {
+      List rows = await db.rawQuery("SELECT fc.* FROM familyCards fc INNER JOIN activityReceivedCards arc ON fc.id = arc.familyCard_Id AND activityReceived_Id = ${actitivtyId}");
+      existedModels  = rows.map((e) => FamilyCardModel.fromJson(e)).toList();
+    }
+    catch(ex) { }
+    return existedModels;
+  }
+
   Future<List<FamilyCardModel>> getFamilyCardModelsLocally(int userid,int permission,final Database db) async {
     List<FamilyCardModel> models = [];
     try {

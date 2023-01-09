@@ -250,15 +250,21 @@ class DistributionProvider {
         return false;
     }
 
-    Future<void> removeUnReceivedActivitiesLocally(int userId, final Database db) async {
+    Future<void> removeUnReceivedActivitiesLocally(int userId, int permission, final Database db) async {
 
-      var ars_condition  = "received = 0 AND userid = ?";
-      var ars = await db.query("activitiesReceived",where: ars_condition,whereArgs: [userId]);
+      var ars_condition = '';
+      if(permission == Permissions.MealCheck.index) {
+        ars_condition = 'mealChecked is null AND mealUser = ?';
+      }
+      else {
+        ars_condition = "received = 0 AND userid = ?";
+      }
+      var ars = await db.query("activitiesReceived",where: ars_condition, whereArgs: [userId]);
       await db.transaction((txn) async {
             for(var i = 0; i < ars.length;i++) {
               var arg = ActivitiesReceivedModel.sqliteFromJson(ars[i]);
-              await txn.delete("activityReceivedCards",where: "familyCard_Id = ?", whereArgs: [arg.card_Id]);
-              await txn.delete("familyCards",where: "id = ?", whereArgs: [arg.card_Id]);
+              await txn.delete("activityReceivedCards",where: "familyCard_Id = ?", whereArgs: [ arg.card_Id ]);
+              await txn.delete("familyCards",where: "id = ?", whereArgs: [ arg.card_Id ]);
             }
             await txn.delete("activitiesReceived",where: ars_condition, whereArgs: [userId]);
             txn.batch().commit();

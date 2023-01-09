@@ -1,10 +1,9 @@
-import 'package:care_app/Views/ApproveCardView.dart';
 import 'package:flutter/material.dart';
-import '/Views/HomeView.dart';
-import '/Views/ApproveCardView.dart';
-import '/Views/ReadCardView.dart';
-import '/Views/SettingsView.dart';
-import '/Views/LoginView.dart';
+import 'package:care_app/Views/ApproveCardView.dart';
+import 'package:care_app/Views/HomeView.dart';
+import 'package:care_app/Views/ReadCardView.dart';
+import 'package:care_app/Views/SettingsView.dart';
+import 'package:care_app/Views/LoginView.dart';
 import 'package:easy_localization/easy_localization.dart' as easylocal;
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'Views/ActivateCardView.dart';

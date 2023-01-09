@@ -22,7 +22,7 @@ class SettingsController extends ControllerMVC {
     try {
       setState(() { showRemoveActivitiesProgress = true; });
       final Database db = await DatabaseHandler.initializeDB();
-      _distributionProvider.removeUnReceivedActivitiesLocally(UserProvider.currentUser!.id, db);
+      _distributionProvider.removeUnReceivedActivitiesLocally(UserProvider.currentUser!.id,UserProvider.currentRole!, db);
       setState(() { showRemoveActivitiesProgress = false; });
     }
     catch(ex) { }

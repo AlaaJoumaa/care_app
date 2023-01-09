@@ -138,8 +138,12 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
 
   @override
   void dispose() {
-    con.init();
-    con.clearSignature();
+     con.init();
+     con.stopNFC();
+     if(con.connected) {
+       con.bluetooth.disconnect();
+     }
+     con.connected = false;
     super.dispose();
   }
 
@@ -538,10 +542,10 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                             child: new Padding(child:
                             new Container(
                               child: Signature(
-                                color: Colors.black,
+                                color: con.signColor,
                                 strokeWidth: 5.0,
                                 onSign: () { },
-                                key: con.signature,
+                                key: con.signature
                               ),
                               width: 300,
                               height: 300,
@@ -620,8 +624,6 @@ class _ReadCardViewState extends StateMVC<ReadCardView> {
                                     left: 10, right: 10, top: 0, bottom: 5))),
                               ])
                           : new SizedBox()),
-
-
                         ]),
                       ), padding: const EdgeInsets.only(
                               left: 10.0, right: 10.0, top: 10, bottom: 0))
